@@ -1,0 +1,12 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.member_in_out">
+    <!-- Flutter needs it to communicate with the running application
+         to allow setting breakpoints, to provide hot reload, etc.
+    -->
+    <application
+        android:name="io.flutter.app.FlutterApplication"
+        android:label="member_in_out"
+        android:icon="@mipmap/ic_launcher">
+    </application>
+    <uses-permission android:name="android.permission.INTERNET"/>
+</manifest>
