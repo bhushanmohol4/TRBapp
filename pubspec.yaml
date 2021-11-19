@@ -36,6 +36,7 @@ dependencies:
   gsheets:
   get: ^4.3.8
   device_info: 
+  connectivity_plus:
 
 
   # The following adds the Cupertino Icons font to your application.

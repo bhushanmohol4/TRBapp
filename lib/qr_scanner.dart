@@ -4,6 +4,8 @@ import 'package:gsheets/gsheets.dart';
 import 'package:member_in_out/db.dart';
 import 'package:member_in_out/main.dart' as m;
 import 'package:device_info/device_info.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:get/get.dart';
 
 const _credentials = r'''
 {
@@ -44,10 +46,25 @@ class _qrscanState extends State<qrscan> {
     print('In');
     final ss = await gsheets.spreadsheet(_spreadsheetId);
     var sheet = ss.worksheetByTitle(day[0]);
+    if (sheet == null) {
+      sheet ??= await ss.addWorksheet(day[0]);
+      await sheet.values.insertValue('Device ID', column: 1, row: 1);
+      await sheet.values.insertValue('Name', column: 2, row: 1);
+      await sheet.values.insertValue('In time', column: 3, row: 1);
+      await sheet.values.insertValue('Out time', column: 4, row: 1);
+    }
     TimeOfDay time = TimeOfDay.now();
     String Time = time.hour.toString() + ':' + time.minute.toString();
     final tempRow = [deviceId.toString(), member.toString(), Time];
-    await sheet!.values.appendRow(tempRow);
+    int temp = await sheet!.values.rowIndexOf(deviceId);
+    if (temp == -1) {
+      await sheet!.values.appendRow(tempRow);
+    } else {
+      AlertDialog(
+        title: Text("In time already recorded"),
+        actions: <Widget>[ElevatedButton(onPressed: go, child: Text("Ok"))],
+      );
+    }
   }
 
   void outTime() async {
@@ -146,17 +163,27 @@ class _qrscanState extends State<qrscan> {
   }
 
   Future scan() async {
-    ScanResult codeScanner = await BarcodeScanner.scan();
-    String result = codeScanner.rawContent;
-    getName();
-    setState(() {
-      response = result;
-      if (response == '1') {
-        inTime();
-      } else if (response == '2') {
-        outTime();
-      }
-    });
+    final Connectivity _connectivity = Connectivity();
+    ConnectivityResult connectivityResult =
+        await _connectivity.checkConnectivity();
+    if (connectivityResult == ConnectivityResult.mobile ||
+        connectivityResult == ConnectivityResult.wifi) {
+      ScanResult codeScanner = await BarcodeScanner.scan();
+      String result = codeScanner.rawContent;
+      getName();
+      setState(() {
+        response = result;
+        if (response == '1') {
+          inTime();
+        } else if (response == '2') {
+          outTime();
+        }
+      });
+    }
+  }
+
+  void go() async {
+    Navigator.push(context, MaterialPageRoute(builder: (context) => qrscan()));
   }
 
   void getName() async {
